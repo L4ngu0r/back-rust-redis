@@ -1,0 +1,16 @@
+version: '3'
+services: 
+    redis:
+        image: redis
+        hostname: redis
+        ports:
+            - "6379:6379"
+        container_name: "some-redis"
+
+    redis-commander:
+        image: rediscommander/redis-commander
+        environment:
+            - REDIS_HOSTS=local:redis:6379
+        ports: 
+            - "8000:8081"
+        container_name: "redis-commander"
