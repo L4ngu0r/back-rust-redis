@@ -9,6 +9,13 @@ use warp::Filter;
 use warp::http::StatusCode;
 use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Serialize)]
+struct Todo {
+    id: String,
+    name: String,
+    description: String
+}
+
 async fn connect() -> redis::RedisResult<Connection> {
     let client = redis::Client::open("redis://localhost:6379")?;
     let con = client.get_async_connection().await?;
@@ -48,13 +55,6 @@ async fn update_todo(todo: Todo) -> Result<impl warp::Reply, Infallible> {
     Ok(StatusCode::OK)
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-struct Todo {
-    id: String,
-    name: String,
-    description: String
-}
-
 #[tokio::main]
 async fn main() -> redis::RedisResult<()> {
     /* let hash_index: String = ["todo", "date"].join(":");
@@ -65,9 +65,6 @@ async fn main() -> redis::RedisResult<()> {
     let in_ms = since_the_epoch.as_millis();
     println!("{}", in_ms);
     // con.zadd("todo:id", 1234.0, "todo:1")?; */
-
-    let hello = warp::path!("hello" / String)
-        .map(|name| format!("Hello, {}!", name));
 
     let all = warp::path("all")
         .and(warp::get())
@@ -90,11 +87,39 @@ async fn main() -> redis::RedisResult<()> {
         .and(warp::body::json())
         .and_then(|id: String, todo: Todo| update_todo(todo));
 
-    let routes = warp::any().and(hello.or(all).or(add).or(delete).or(put));
+    let routes = warp::any().and(all.or(add).or(delete).or(put));
 
     warp::serve(routes)
         .run(([127, 0, 0, 1], 3030))
         .await;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}
+
+#[tokio::test]
+async fn routes() {
+    let all = warp::path("all")
+        .and(warp::get())
+        .and_then(list_all);
+
+    let all_req = || warp::test::request().path("/all");
+
+    assert!(all_req().matches(&all).await);
+
+    let del = warp::delete()
+        .and(warp::path("del"))
+        .and(warp::path::param::<String>())
+        .and_then(|id| delete_todo(id));
+
+    let req = || warp::test::request().method("DELETE").path("/del/1");
+
+    assert!(req().matches(&del).await);
 }
