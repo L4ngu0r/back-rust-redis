@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/L4ngu0r/back-rust-redis.svg?style=shield)](https://circleci.com/gh/L4ngu0r/back-rust-redis)
+
 ## Use docker-compose to launch stack :
 
 ```
