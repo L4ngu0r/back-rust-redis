@@ -15,6 +15,10 @@ jobs:
             - restore_cache:
                 keys:
                     - cargo-cache-{{ arch }}-{{ checksum "Cargo.lock" }}
+            - setup_remote_docker
+            - run:
+                name: Start Redis
+                command: docker run --rm --name some-redis -p 6379:6379 -d redis
             - run:
                 name: Build all targets
                 command: cargo build --all --all-targets
